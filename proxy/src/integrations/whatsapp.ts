@@ -32,6 +32,11 @@ export const whatsapp: Driver<Creds> = {
     const info: Record<string, unknown> = await this.validate(ctx, c);
     const config = JSON.parse(integ.config_json) as { verifyToken?: string };
     const verifyToken = config.verifyToken ?? randomToken(18);
+    // Meta llama al GET de verificación durante el registro: el token tiene que estar guardado antes.
+    if (!config.verifyToken) {
+      ctx.db.prepare('UPDATE integrations SET config_json = ? WHERE id = ?')
+        .run(JSON.stringify({ ...config, verifyToken }), integ.id);
+    }
     let webhookRegistered = false;
     try {
       const body = new URLSearchParams({
