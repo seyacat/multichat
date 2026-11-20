@@ -1,8 +1,7 @@
 // Service worker: cache del shell y Web Push con descifrado local (protocol.md §8).
-import { openJson } from './lib/crypto';
 import { kvGet } from './lib/db';
-import { previewText } from './lib/merge';
-import type { ContactProfile, LocalMessage, MessagePayload, PushPayload } from './lib/types';
+import { buildNotification } from './lib/push';
+import type { PushPayload } from './lib/types';
 
 declare const __SW_VERSION__: string | undefined;
 
@@ -73,35 +72,6 @@ sw.addEventListener('fetch', event => {
   );
 });
 
-async function buildNotification(mc: PushPayload): Promise<{ title: string; body: string }> {
-  const generic = { title: 'Multichat', body: 'Nuevo mensaje' };
-  if (mc.hidePreview) return generic;
-  const key = await kvGet('accountKey').catch(() => undefined);
-  if (!key) return generic;
-  const priv = new Uint8Array(key);
-  let title = generic.title;
-  try {
-    if (mc.alias) title = (await openJson<{ name: string }>(mc.alias, priv)).name || title;
-    else if (mc.profile) {
-      const p = await openJson<ContactProfile>(mc.profile, priv);
-      title = p.name || p.username || p.phone || title;
-    }
-  } catch {
-    /* sin nombre */
-  }
-  let body = generic.body;
-  if (mc.envelope) {
-    try {
-      const payload = await openJson<MessagePayload>(mc.envelope, priv);
-      const text = previewText({ payload } as LocalMessage);
-      body = payload.senderName ? `${payload.senderName}: ${text}` : text || body;
-    } catch {
-      /* texto genérico */
-    }
-  }
-  return { title, body };
-}
-
 sw.addEventListener('push', event => {
   event.waitUntil(
     (async () => {
@@ -112,7 +82,7 @@ sw.addEventListener('push', event => {
       } catch {
         mc = null;
       }
-      const n = mc ? await buildNotification(mc) : { title: 'Multichat', body: 'Nuevo mensaje' };
+      const n = mc ? await buildNotification(mc, await kvGet('accountKey').catch(() => undefined)) : { title: 'Multichat', body: 'Nuevo mensaje' };
       await sw.registration.showNotification(n.title, {
         body: n.body,
         icon: scoped('icons/icon-192.png'),
