@@ -15,7 +15,9 @@ settings:
     DEVELOPMENT_TEAM: P7G853375S
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
+    # Servidor que la app propone en el login (editable por el usuario).
+    MC_DEFAULT_SERVER: https://known-simple-gull.ngrok-free.app
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 targets:
   Multichat:
@@ -34,6 +36,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: es
         ITSAppUsesNonExemptEncryption: false
+        MCDefaultServer: $(MC_DEFAULT_SERVER)
         AppIdentifierPrefix: $(AppIdentifierPrefix)
         NSCameraUsageDescription: "Para hacer fotos y videos que envías, y para escanear el código de vinculación de otro dispositivo."
         NSMicrophoneUsageDescription: "Para grabar el sonido de los videos que envías."
@@ -67,6 +70,7 @@ targets:
       path: MultichatNotificationService/Info.plist
       properties:
         CFBundleDisplayName: MultichatNotificationService
+        MCDefaultServer: $(MC_DEFAULT_SERVER)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         AppIdentifierPrefix: $(AppIdentifierPrefix)

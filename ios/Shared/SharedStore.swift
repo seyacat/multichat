@@ -4,7 +4,11 @@ import Security
 /// Constantes y almacenes compartidos entre la app y la extensión de notificaciones.
 enum AppGroup {
     static let identifier = "group.com.dotrino.multichat"
-    static let defaultServerURL = "http://localhost:8787"
+    /// Servidor por defecto: clave MCDefaultServer del Info.plist (project.yml), o localhost.
+    static var defaultServerURL: String {
+        (Bundle.main.object(forInfoDictionaryKey: "MCDefaultServer") as? String).flatMap { $0.isEmpty ? nil : $0 }
+            ?? "http://localhost:8787"
+    }
 
     /// Carpeta del App Group. Sin el entitlement (simulador sin firma) cae a Application Support.
     static var containerURL: URL {
