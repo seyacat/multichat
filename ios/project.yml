@@ -1,0 +1,112 @@
+# Multichat para iOS (SwiftUI, iOS 17+). XcodeGen genera Multichat.xcodeproj (no se versiona).
+#
+#   cd ios && xcodegen generate
+#   xcodebuild test -project Multichat.xcodeproj -scheme Multichat \
+#     -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
+name: Multichat
+options:
+  bundleIdPrefix: com.dotrino
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: P7G853375S
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  Multichat:
+    type: application
+    platform: iOS
+    sources:
+      - Multichat
+      - Shared
+    dependencies:
+      - target: MultichatNotificationService
+    info:
+      path: Multichat/Info.plist
+      properties:
+        CFBundleDisplayName: Multichat
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: es
+        ITSAppUsesNonExemptEncryption: false
+        AppIdentifierPrefix: $(AppIdentifierPrefix)
+        NSCameraUsageDescription: "Para hacer fotos y videos que envías, y para escanear el código de vinculación de otro dispositivo."
+        NSMicrophoneUsageDescription: "Para grabar el sonido de los videos que envías."
+        NSPhotoLibraryAddUsageDescription: "Para guardar fotos recibidas."
+        NSLocalNetworkUsageDescription: "Para conectar con un proxy de Multichat en tu red local durante el desarrollo."
+        # Excepción ATS acotada: solo red local (localhost, *.local, IPs) para desarrollo.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    entitlements:
+      path: Multichat/Multichat.entitlements
+      properties:
+        aps-environment: development
+        com.apple.security.application-groups: [group.com.dotrino.multichat]
+        keychain-access-groups: ["$(AppIdentifierPrefix)com.dotrino.multichat.shared"]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dotrino.multichat
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+
+  MultichatNotificationService:
+    type: app-extension
+    platform: iOS
+    sources:
+      - MultichatNotificationService
+      - Shared
+    info:
+      path: MultichatNotificationService/Info.plist
+      properties:
+        CFBundleDisplayName: MultichatNotificationService
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        AppIdentifierPrefix: $(AppIdentifierPrefix)
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
+    entitlements:
+      path: MultichatNotificationService/MultichatNotificationService.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.dotrino.multichat]
+        keychain-access-groups: ["$(AppIdentifierPrefix)com.dotrino.multichat.shared"]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dotrino.multichat.NotificationService
+        TARGETED_DEVICE_FAMILY: "1"
+
+  MultichatTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - MultichatTests
+      # Vectores de cripto por referencia de ruta (no se duplican).
+      - path: ../shared/crypto-vectors/vectors.json
+        buildPhase: resources
+    dependencies:
+      - target: Multichat
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Multichat.app/Multichat"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  Multichat:
+    build:
+      targets:
+        Multichat: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [MultichatTests]
