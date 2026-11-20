@@ -51,6 +51,7 @@ export const whatsapp: Driver<Creds> = {
       if (!res.ok || j.error) throw new Error(j.error?.message ?? res.statusText);
       await gfetch(graph(ctx, `${c.wabaId}/subscribed_apps`), c.accessToken, { method: 'POST' });
       webhookRegistered = true;
+      info.webhookError = null; // borra el error de un intento anterior
     } catch (e) {
       ctx.log.warn({ integration: integ.id, err: String(e) }, 'registro automático del webhook de WhatsApp falló');
       info.webhookError = String((e as Error).message ?? e);
