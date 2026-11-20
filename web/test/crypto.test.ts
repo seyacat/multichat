@@ -92,7 +92,7 @@ describe('sobres', () => {
   it('rechaza sobres manipulados', async () => {
     const v = vectors.envelope[1]!;
     const env = b64uDecode(v.envelope);
-    env[env.length - 1] ^= 1;
+    env[env.length - 1] = env[env.length - 1]! ^ 1;
     await expect(openBytes(env, b64uDecode(v.recipientPrivateKey))).rejects.toThrow();
     const bad = b64uDecode(v.envelope);
     bad[0] = 2;
