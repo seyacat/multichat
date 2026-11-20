@@ -253,5 +253,12 @@ describe('whatsapp', () => {
     await post(late); await flush();
     const { messages } = (await t.app.inject({ method: 'GET', url: '/api/messages', headers: t.auth })).json();
     expect(messages.find((m: any) => m.id === sent.json().id).status).toBe('read');
+
+    // cambiar solo el token conserva el resto de credenciales
+    const p = await t.app.inject({ method: 'PATCH', url: `/api/integrations/${integ.id}`, headers: t.auth, payload: { credentials: { accessToken: 'EAAnuevo9876', appSecret: '' } } });
+    expect(p.statusCode).toBe(200);
+    expect(p.json().credentialHint).toBe('…9876');
+    const stored = t.ctx.vault.decrypt<any>((t.ctx.db.prepare('SELECT credentials_enc FROM integrations WHERE id = ?').get(integ.id) as any).credentials_enc);
+    expect(stored).toEqual({ ...creds, accessToken: 'EAAnuevo9876' });
   });
 });

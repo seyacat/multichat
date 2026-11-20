@@ -314,7 +314,7 @@ struct IntegrationDetailView: View {
 
             Section {
                 if let h = i.credentialHint { LabeledContent("Credencial actual", value: h) }
-                Button("Rotar credenciales") { rotating = true }
+                Button("Cambiar token o credenciales") { rotating = true }
             } footer: {
                 Text(i.type.credentialHelp)
             }
@@ -471,18 +471,18 @@ struct RotateCredentialsView: View {
                 Section {
                     CredentialFieldsView(type: integration.type, values: $values)
                 } footer: {
-                    Text("Las credenciales nuevas se validan con la plataforma y la integración se reinicia.")
+                    Text("Escribe solo lo que cambia (por ejemplo, el token). Los campos vacíos se mantienen. Se validan con la plataforma y la integración se reinicia.")
                 }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
             }
-            .navigationTitle("Rotar credenciales")
+            .navigationTitle("Cambiar credenciales")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     if busy { ProgressView() } else {
                         Button("Guardar") { Task { await save() } }
-                            .disabled(!integration.type.credentialFields.allSatisfy { !(values[$0.key] ?? "").isEmpty })
+                            .disabled(!integration.type.credentialFields.contains { !(values[$0.key] ?? "").trimmingCharacters(in: .whitespaces).isEmpty })
                     }
                 }
             }
@@ -493,7 +493,8 @@ struct RotateCredentialsView: View {
         busy = true
         defer { busy = false }
         do {
-            try await model.patchIntegration(integration.id, .init(credentials: values.mapValues { $0.trimmingCharacters(in: .whitespacesAndNewlines) }))
+            let changed = values.mapValues { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.value.isEmpty }
+            try await model.patchIntegration(integration.id, .init(credentials: changed))
             dismiss()
         } catch {
             self.error = error.localizedDescription

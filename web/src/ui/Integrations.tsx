@@ -442,7 +442,8 @@ export function EditIntegration({ id }: { id: string }) {
   }
 
   const info = i.info as Record<string, unknown>;
-  const fieldsComplete = FIELDS[i.type].every(f => (creds[f.key] ?? '').length > 0);
+  // Para cambiar credenciales basta un campo: los vacíos conservan su valor actual.
+  const fieldsComplete = FIELDS[i.type].some(f => (creds[f.key] ?? '').trim().length > 0);
 
   return (
     <div class="pane">
@@ -552,14 +553,15 @@ export function EditIntegration({ id }: { id: string }) {
           <div class="group-title">Credenciales</div>
           {!rotating ? (
             <button class="btn" onClick={() => setRotating(true)}>
-              <Icon name="key" size={18} /> Rotar credenciales
+              <Icon name="key" size={18} /> Cambiar token o credenciales
             </button>
           ) : (
             <form
               class="stack"
               onSubmit={async e => {
                 e.preventDefault();
-                if (await patch({ credentials: creds }, 'Credenciales actualizadas')) {
+                const changed = Object.fromEntries(Object.entries(creds).filter(([, v]) => v.trim() !== ''));
+                if (await patch({ credentials: changed }, 'Credenciales actualizadas')) {
                   setRotating(false);
                   setCreds({});
                 }
@@ -569,6 +571,7 @@ export function EditIntegration({ id }: { id: string }) {
                 <summary>Dónde conseguirlas</summary>
                 {HELP[i.type]}
               </details>
+              <p class="muted small">Escribe solo lo que cambia (por ejemplo, el token). Los campos vacíos se mantienen.</p>
               <CredentialFields type={i.type} values={creds} onChange={setCreds} />
               <div class="row gap">
                 <button type="button" class="btn" onClick={() => setRotating(false)}>

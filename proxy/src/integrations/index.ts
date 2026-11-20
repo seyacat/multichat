@@ -136,7 +136,10 @@ export async function patchIntegration(ctx: Ctx, integ: IntegrationRow, input: {
   if (input.credentials !== undefined) {
     let creds: Record<string, string>;
     try {
-      creds = d.parseCredentials(input.credentials);
+      // Los campos vacíos o ausentes conservan su valor actual (p. ej. cambiar solo el token).
+      const sent = Object.fromEntries(Object.entries((input.credentials ?? {}) as Record<string, unknown>)
+        .filter(([, v]) => typeof v === 'string' && v.trim() !== ''));
+      creds = d.parseCredentials({ ...credsOf<Record<string, string>>(ctx, integ), ...sent });
       await d.validate(ctx, creds);
     } catch (e) { asApi(e); }
     sets.push('credentials_enc = ?', 'credential_hint = ?');

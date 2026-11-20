@@ -111,7 +111,7 @@ Credenciales por tipo (solo de entrada; nunca se devuelven):
 ### `POST /api/integrations`
 `{ "type", "name", "color", "credentials", "config"? }` → `201 Integration`. Valida contra la plataforma, guarda cifrado y arranca (Telegram: `setWebhook`; WhatsApp: registra el webhook; Discord: conecta al gateway). Límite por usuario → `403 limit_reached`.
 ### `PATCH /api/integrations/:id`
-Cualquiera de `{ "name", "color", "enabled", "credentials", "config" }` → `200 Integration`. Cambiar `credentials` re-valida y reinicia.
+Cualquiera de `{ "name", "color", "enabled", "credentials", "config" }` → `200 Integration`. Cambiar `credentials` re-valida y reinicia. `credentials` puede ser parcial: los campos ausentes o vacíos conservan su valor (p. ej. `{ "credentials": { "accessToken": "…" } }`).
 ### `DELETE /api/integrations/:id` → `204`
 Para la integración, deshace el webhook y borra sus contactos y mensajes.
 ### `GET /api/integrations/:id/discord/channels`
