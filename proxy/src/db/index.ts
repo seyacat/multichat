@@ -102,6 +102,8 @@ const MIGRATIONS: string[] = [
     created_at INTEGER NOT NULL
   );
   `,
+  // Sin solicitudes: los contactos nuevos se aceptan solos (pedido del cliente).
+  `UPDATE contacts SET status = 'accepted' WHERE status = 'pending';`,
 ];
 
 export type DB = DatabaseSync;

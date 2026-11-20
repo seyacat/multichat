@@ -145,7 +145,7 @@ Al activar un canal de Discord en `config.channelIds`, el proxy crea su contacto
 
 Nombre a mostrar: `alias.name` si existe, si no `profile.name`.
 
-Un contacto que escribe por primera vez a un bot nace `pending` (aparece en **Solicitudes**). Sus mensajes se guardan. Con `blocked`, el proxy descarta lo que llegue. `archived` sigue recibiendo y vuelve a la lista principal si llega algo.
+Un contacto que escribe por primera vez a un bot nace `accepted`: no hay solicitudes. `pending` queda en el enum por compatibilidad; los clientes solo muestran Solicitudes si existe algún contacto `pending`. Con `blocked`, el proxy descarta lo que llegue. `archived` sigue recibiendo y vuelve a la lista principal si llega algo.
 
 ### `GET /api/contacts?since=<seq>` → `Contact[]` con `seq > since` (sin `since`: todos)
 ### `PATCH /api/contacts/:id`

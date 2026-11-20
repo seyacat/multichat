@@ -73,9 +73,11 @@ struct MainTabView: View {
         TabView {
             ChatListView()
                 .tabItem { Label("Chats", systemImage: "bubble.left.and.bubble.right.fill") }
-            RequestsView()
-                .tabItem { Label("Solicitudes", systemImage: "person.crop.circle.badge.questionmark") }
-                .badge(pending.count)
+            if !pending.isEmpty {
+                RequestsView()
+                    .tabItem { Label("Solicitudes", systemImage: "person.crop.circle.badge.questionmark") }
+                    .badge(pending.count)
+            }
             SettingsView()
                 .tabItem { Label("Ajustes", systemImage: "gearshape") }
         }

@@ -53,7 +53,7 @@ struct ChatListView: View {
                         systemImage: "bubble.left.and.bubble.right",
                         description: Text(model.integrations.isEmpty
                                           ? "Añade un bot de Telegram o Discord, o un número de WhatsApp en Ajustes → Integraciones."
-                                          : "Cuando alguien escriba a tus bots aparecerá aquí (los nuevos contactos llegan a Solicitudes).")
+                                          : "Cuando alguien escriba a tus bots aparecerá aquí.")
                     )
                     .listRowSeparator(.hidden)
                 }

@@ -86,7 +86,7 @@ export function sealProfile(ctx: Ctx, accountKey: string, p: ContactProfile) {
 /** Crea o actualiza un contacto. Devuelve la fila y si es nuevo. */
 export function upsertContact(
   ctx: Ctx, integ: IntegrationRow, externalId: string, kind: 'direct' | 'group',
-  profile: ContactProfile, initialStatus: 'pending' | 'accepted' = 'pending',
+  profile: ContactProfile, initialStatus: 'pending' | 'accepted' = 'accepted',
 ): { contact: ContactRow; created: boolean } {
   const accountKey = getAccountKey(ctx, integ.user_id);
   if (!accountKey) throw new Error('la cuenta no tiene clave pública');

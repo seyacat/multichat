@@ -82,9 +82,11 @@ export function Inbox({ view }: { view: InboxView }) {
         <button role="tab" aria-selected={view === 'chats'} onClick={() => go('/')}>
           Chats
         </button>
-        <button role="tab" aria-selected={view === 'requests'} onClick={() => go('/requests')}>
-          Solicitudes {pendingCount > 0 && <span class="pill">{pendingCount}</span>}
-        </button>
+        {pendingCount > 0 && (
+          <button role="tab" aria-selected={view === 'requests'} onClick={() => go('/requests')}>
+            Solicitudes <span class="pill">{pendingCount}</span>
+          </button>
+        )}
         <button role="tab" aria-selected={view === 'archived'} onClick={() => go('/archived')}>
           Archivados
         </button>

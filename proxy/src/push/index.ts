@@ -37,7 +37,7 @@ export class Push {
         const data = JSON.parse(d.push_data!);
         if (d.push_kind === 'apns' && this.apns) {
           const body = (env: string | null) => ({
-            aps: { alert: { title: 'Multichat', body: contact.status === 'pending' ? 'Nueva solicitud de chat' : 'Nuevo mensaje' },
+            aps: { alert: { title: 'Multichat', body: 'Nuevo mensaje' },
                    'mutable-content': 1, sound: 'default', 'thread-id': contact.id },
             mc: { ...mc, envelope: env },
           });

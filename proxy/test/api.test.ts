@@ -97,7 +97,7 @@ describe('telegram', () => {
     expect(body.secret_token).toBeTruthy();
   });
 
-  it('mensaje entrante → contacto pending sellado; aceptar; responder', async () => {
+  it('mensaje entrante → contacto aceptado y sellado; responder', async () => {
     const calls = telegramMock();
     const integ = await createTelegram();
     const secret = (t.ctx.db.prepare('SELECT webhook_secret FROM integrations WHERE id = ?').get(integ.id) as any).webhook_secret;
@@ -116,7 +116,7 @@ describe('telegram', () => {
 
     const contacts = (await t.app.inject({ method: 'GET', url: '/api/contacts', headers: t.auth })).json();
     expect(contacts).toHaveLength(1);
-    expect(contacts[0]).toMatchObject({ status: 'pending', kind: 'direct', unread: 2 });
+    expect(contacts[0]).toMatchObject({ status: 'accepted', kind: 'direct', unread: 2 });
     expect(openJson(contacts[0].profile, t.keys.privateKey)).toEqual({ name: 'Pedro', username: 'pedro', phone: null, platform: 'telegram' });
 
     const { messages } = (await t.app.inject({ method: 'GET', url: '/api/messages?since=0', headers: t.auth })).json();
@@ -129,7 +129,8 @@ describe('telegram', () => {
     expect(decryptBlob(blob.rawPayload, b64u.decode(p2.attachment.fileKey)).equals(PHOTO)).toBe(true);
     expect(calls.some(c => c.url.includes('/getFile') && JSON.parse(String(c.init.body)).file_id === 'b')).toBe(true);
 
-    // escribir a un pending: prohibido
+    // un contacto puesto en pending a mano no recibe envíos
+    await t.app.inject({ method: 'PATCH', url: `/api/contacts/${contacts[0].id}`, headers: t.auth, payload: { status: 'pending' } });
     const forbidden = await t.app.inject({ method: 'POST', url: `/api/contacts/${contacts[0].id}/messages`, headers: t.auth, payload: { text: 'hola' } });
     expect(forbidden.statusCode).toBe(403);
 
