@@ -7,8 +7,12 @@ export interface WsDeps {
   onEvent: (e: WsEvent) => void;
   onOpen: () => void;
   onState: (s: 'off' | 'connecting' | 'open') => void;
+  /** Sondeo de respaldo mientras el WS no conecta (p. ej. detrás de un túnel sin WebSocket). */
+  onPoll?: () => void;
   WebSocketImpl?: typeof WebSocket;
 }
+
+export const POLL_MS = 4_000;
 
 export const PING_MS = 25_000;
 
@@ -21,6 +25,7 @@ export class Socket {
   private ws: WebSocket | null = null;
   private ping: ReturnType<typeof setInterval> | null = null;
   private retry: ReturnType<typeof setTimeout> | null = null;
+  private poll: ReturnType<typeof setInterval> | null = null;
   private attempt = 0;
   private stopped = true;
   private connecting = false;
@@ -57,7 +62,13 @@ export class Socket {
     return this.ws?.readyState === 1;
   }
 
+  private stopPolling(): void {
+    if (this.poll) clearInterval(this.poll);
+    this.poll = null;
+  }
+
   private clearTimers(): void {
+    this.stopPolling();
     if (this.ping) clearInterval(this.ping);
     if (this.retry) clearTimeout(this.retry);
     this.ping = null;
@@ -68,6 +79,10 @@ export class Socket {
     if (this.stopped) return;
     const d = backoffDelay(this.attempt++);
     this.deps.onState('connecting');
+    if (this.attempt >= 2 && !this.poll && this.deps.onPoll) {
+      const onPoll = this.deps.onPoll;
+      this.poll = setInterval(() => onPoll(), POLL_MS);
+    }
     this.retry = setTimeout(() => {
       this.retry = null;
       void this.connect();
@@ -96,6 +111,7 @@ export class Socket {
     ws.onopen = () => {
       this.connecting = false;
       this.attempt = 0;
+      this.stopPolling();
       this.deps.onState('open');
       this.ping = setInterval(() => {
         if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'ping' }));

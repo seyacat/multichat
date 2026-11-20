@@ -30,7 +30,11 @@ const SERVER_KEY = 'mc.server';
 export function defaultServer(): string {
   const env = (import.meta.env?.VITE_API_BASE as string | undefined) ?? '';
   if (env) return env.replace(/\/+$/, '');
-  return typeof location !== 'undefined' ? location.origin : 'http://localhost:8787';
+  if (typeof location === 'undefined') return 'http://localhost:8787';
+  // Servida por el proxy en <base>/app/… (p. ej. detrás del túnel https://r.dotrino.com/<llave>/app/):
+  // la API cuelga de <base>.
+  const i = location.pathname.indexOf('/app/');
+  return location.origin + (i > 0 ? location.pathname.slice(0, i) : '');
 }
 
 export function getServer(): string {

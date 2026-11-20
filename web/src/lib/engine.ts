@@ -83,6 +83,7 @@ export class Engine {
       },
       onEvent: e => void this.onWsEvent(e),
       onOpen: () => void this.sync(),
+      onPoll: () => void this.sync(),
       onState: st => (S.wsState.value = st),
       ...(opts.WebSocketImpl ? { WebSocketImpl: opts.WebSocketImpl } : {}),
     });

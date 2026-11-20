@@ -84,7 +84,10 @@ export async function buildApp(config: Config, opts: { logger?: boolean; dbPath?
 
   if (config.serveWeb) {
     await app.register(fastifyStatic, { root: config.serveWeb, prefix: '/app/' });
-    app.get('/', (_req, reply) => reply.redirect('/app/'));
+    // Rutas relativas: detrás del túnel la app vive en https://r.dotrino.com/<llave>/app/…
+    // y el túnel quita la barra final, así que /app/ llega como /app.
+    app.get('/app', (_req, reply) => reply.redirect('app/index.html'));
+    app.get('/', (_req, reply) => reply.redirect(`${config.publicUrl}/app/index.html`));
   }
 
   app.addHook('onClose', async () => {

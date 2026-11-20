@@ -19,6 +19,9 @@ final class WebSocketClient {
     var onState: ((State) -> Void)?
     /// Se llama tras cada conexión (la app sincroniza).
     var onConnected: (() -> Void)?
+    /// Sondeo de respaldo mientras el WS no conecta (p. ej. detrás de un túnel sin WebSocket).
+    var onPoll: (() -> Void)?
+    private var pollTask: Task<Void, Never>?
 
     private let api: APIClient
     private let urlSession = URLSession(configuration: .default)
@@ -41,6 +44,7 @@ final class WebSocketClient {
         generation += 1
         reconnectTask?.cancel()
         pingTask?.cancel()
+        stopPolling()
         task?.cancel(with: .goingAway, reason: nil)
         task = nil
         state = .disconnected
@@ -102,6 +106,7 @@ final class WebSocketClient {
                 if self.state != .connected {
                     self.state = .connected
                     self.attempt = 0
+                    self.stopPolling()
                     self.onConnected?()
                 }
                 if let data, let ev = try? JSONDecoder().decode(WSEvent.self, from: data) {
@@ -143,6 +148,7 @@ final class WebSocketClient {
         guard wanted, gen == generation else { return }
         state = .disconnected
         attempt += 1
+        if attempt >= 2 { startPolling() }
         let delay = min(30.0, pow(2.0, Double(min(attempt, 5)))) * Double.random(in: 0.8...1.2)
         reconnectTask?.cancel()
         reconnectTask = Task { @MainActor [weak self] in
@@ -152,5 +158,21 @@ final class WebSocketClient {
             if self.attempt >= 2 { _ = try? await self.api.refresh() }
             self.connect()
         }
+    }
+
+    private func startPolling() {
+        guard pollTask == nil, onPoll != nil else { return }
+        pollTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(4))
+                guard let self, !Task.isCancelled, self.wanted, self.state != .connected else { return }
+                self.onPoll?()
+            }
+        }
+    }
+
+    private func stopPolling() {
+        pollTask?.cancel()
+        pollTask = nil
     }
 }

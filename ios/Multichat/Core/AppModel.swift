@@ -75,6 +75,7 @@ final class AppModel {
         let ws = WebSocketClient(api: api)
         ws.onState = { [weak self] st in self?.wsState = st }
         ws.onConnected = { [weak self] in Task { await self?.sync() } }
+        ws.onPoll = { [weak self] in Task { await self?.sync() } }
         ws.onEvent = { [weak self] ev in self?.handle(ev) }
         self.ws = ws
     }
