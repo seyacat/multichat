@@ -233,6 +233,21 @@ describe('sync', () => {
     expect(list[0]!.id).toMatch(/^m_/);
   });
 
+  it('eventos WS concurrentes: IndexedDB queda con la última versión', async () => {
+    const c = await server.addContact('Ana');
+    await engine.sync();
+    const m = await server.addMessage(c.id, { text: 'hola' }, { direction: 'out', status: 'pending', clientId: 'k1' });
+    const opt = { ...m, id: localId('k1'), seq: 0, envelope: '', local: true, payload: null };
+    await engine.applyLocalMessages([opt]);
+    const sent = { ...m, status: 'sent' as const, seq: ++server.seq };
+    // llegan casi a la vez: el pendiente (que sustituye al optimista) y el enviado
+    await Promise.all([engine.onWsEvent({ type: 'message', message: m }), engine.onWsEvent({ type: 'message', message: sent })]);
+    expect(S.messages.value.get(c.id)!.map(x => x.status)).toEqual(['sent']);
+    const stored = await db.getOne<{ status: string }>('messages', m.id);
+    expect(stored?.status).toBe('sent');
+    expect(await db.getOne('messages', localId('k1'))).toBeUndefined();
+  });
+
   it('marcar leído y alias sellado con la pública de cuenta', async () => {
     const c = await server.addContact('Ana');
     await server.addMessage(c.id, { text: 'hola' });

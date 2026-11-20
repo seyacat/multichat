@@ -9,7 +9,9 @@ declare const __SW_VERSION__: string | undefined;
 const sw = self as unknown as ServiceWorkerGlobalScope;
 const VERSION = typeof __SW_VERSION__ !== 'undefined' ? __SW_VERSION__ : 'dev';
 const CACHE = `multichat-shell-${VERSION}`;
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon.svg'];
+// Rutas relativas al ámbito del SW (en despliegue la PWA vive en /app/).
+const scoped = (p: string) => new URL(p, sw.registration.scope).toString();
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon.svg'];
 const DEV = VERSION === 'dev';
 
 sw.addEventListener('install', event => {
@@ -17,7 +19,7 @@ sw.addEventListener('install', event => {
     (async () => {
       if (!DEV) {
         const cache = await caches.open(CACHE);
-        await cache.addAll(SHELL).catch(() => undefined);
+        await cache.addAll(SHELL.map(scoped)).catch(() => undefined);
       }
       await sw.skipWaiting();
     })(),
@@ -46,10 +48,10 @@ sw.addEventListener('fetch', event => {
         try {
           const res = await fetch(req);
           const cache = await caches.open(CACHE);
-          void cache.put('/index.html', res.clone());
+          void cache.put(scoped('index.html'), res.clone());
           return res;
         } catch {
-          return (await caches.match('/index.html')) ?? (await caches.match('/')) ?? Response.error();
+          return (await caches.match(scoped('index.html'))) ?? (await caches.match(scoped('./'))) ?? Response.error();
         }
       })(),
     );
@@ -62,7 +64,7 @@ sw.addEventListener('fetch', event => {
       const hit = await caches.match(req);
       if (hit) return hit;
       const res = await fetch(req);
-      if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/'))) {
+      if (res.ok && url.href.startsWith(sw.registration.scope) && /\/(assets|icons)\//.test(url.pathname)) {
         const cache = await caches.open(CACHE);
         void cache.put(req, res.clone());
       }
@@ -113,8 +115,8 @@ sw.addEventListener('push', event => {
       const n = mc ? await buildNotification(mc) : { title: 'Multichat', body: 'Nuevo mensaje' };
       await sw.registration.showNotification(n.title, {
         body: n.body,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/badge-96.png',
+        icon: scoped('icons/icon-192.png'),
+        badge: scoped('icons/badge-96.png'),
         tag: mc?.contactId ?? 'multichat',
         data: { contactId: mc?.contactId ?? null },
       });
@@ -125,7 +127,7 @@ sw.addEventListener('push', event => {
 sw.addEventListener('notificationclick', event => {
   event.notification.close();
   const contactId = (event.notification.data as { contactId?: string | null } | null)?.contactId ?? null;
-  const target = contactId ? `/#/chat/${encodeURIComponent(contactId)}` : '/';
+  const target = scoped(contactId ? `./#/chat/${encodeURIComponent(contactId)}` : './');
   event.waitUntil(
     (async () => {
       const all = await sw.clients.matchAll({ type: 'window', includeUncontrolled: true });

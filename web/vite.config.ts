@@ -6,6 +6,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const target = env.VITE_PROXY_TARGET || 'http://localhost:8787';
   return {
+    // rutas relativas: el proxy sirve el build en /app/ (proxy/src/app.ts)
+    base: './',
     plugins: [preact()],
     server: {
       port: 5173,

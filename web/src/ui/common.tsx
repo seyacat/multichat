@@ -30,8 +30,8 @@ export function Avatar({
 }) {
   const hue = hueFor(seed);
   return (
-    <div class="avatar" style={{ width: size, height: size, '--h': hue }} aria-hidden="true">
-      <span style={{ fontSize: size * 0.38 }}>{group ? <Icon name="users" size={size * 0.45} /> : initials(name)}</span>
+    <div class="avatar" style={{ width: `${size}px`, height: `${size}px`, '--h': hue }} aria-hidden="true">
+      <span style={{ fontSize: `${size * 0.38}px` }}>{group ? <Icon name="users" size={size * 0.45} /> : initials(name)}</span>
       {platform && (
         <span class="avatar-badge">
           <PlatformIcon type={platform} size={Math.max(14, size * 0.36)} />
@@ -190,7 +190,7 @@ export function CopyField({ value, label, secret }: { value: string; label?: str
 }
 
 export function Spinner({ size = 18 }: { size?: number }) {
-  return <span class="spinner" style={{ width: size, height: size }} aria-label="Cargando" />;
+  return <span class="spinner" style={{ width: `${size}px`, height: `${size}px` }} aria-label="Cargando" />;
 }
 
 export function Empty({ icon, title, children }: { icon: Parameters<typeof Icon>[0]['name']; title: string; children?: ComponentChildren }) {

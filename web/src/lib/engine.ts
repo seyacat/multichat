@@ -59,6 +59,8 @@ export class Engine {
   /** Archivos de envíos en curso, por clientId (vista previa y reintento). */
   readonly localFiles = new Map<string, File>();
   private linkPoll: ReturnType<typeof setInterval> | null = null;
+  /** Cola de escrituras en IndexedDB: se aplican en el mismo orden que las fusiones en memoria. */
+  private dbQueue: Promise<void> = Promise.resolve();
   /** Contacto abierto en pantalla (para marcar leído lo que llega). */
   openContactId: string | null = null;
   linkListeners = new Set<(ok: boolean, err?: string) => void>();
@@ -393,10 +395,12 @@ export class Engine {
       fresh.push(await this.decryptContact(c));
     }
     if (fresh.length === 0) return;
-    await db.saveContacts(fresh);
+    // re-comprobar tras los await: otro evento pudo traer una versión más nueva
     const next = new Map(S.contacts.value);
-    for (const c of fresh) next.set(c.id, c);
+    const keep = fresh.filter(c => contactIsNewer(next.get(c.id), c));
+    for (const c of keep) next.set(c.id, c);
     S.contacts.value = next;
+    await this.enqueue(() => db.saveContacts(keep));
   }
 
   async applyMessages(list: Message[]): Promise<LocalMessage[]> {
@@ -421,9 +425,17 @@ export class Engine {
       }
     }
     S.messages.value = next;
-    await db.deleteMany('messages', toRemove);
-    await db.saveMessages(toSave);
+    await this.enqueue(async () => {
+      await db.deleteMany('messages', toRemove);
+      await db.saveMessages(toSave);
+    });
     return stored;
+  }
+
+  private enqueue(fn: () => Promise<void>): Promise<void> {
+    const p = this.dbQueue.then(fn);
+    this.dbQueue = p.catch(() => undefined);
+    return p;
   }
 
   private async setCursor(kind: 'contactsSeq' | 'messagesSeq', seq: number): Promise<void> {
@@ -529,8 +541,6 @@ export class Engine {
   // ---------------- contactos ----------------
 
   async removeContactLocal(id: string): Promise<void> {
-    await db.deleteMany('contacts', [id]);
-    await db.deleteMessagesOfContact(id);
     const c = new Map(S.contacts.value);
     c.delete(id);
     const m = new Map(S.messages.value);
@@ -538,6 +548,10 @@ export class Engine {
     batch(() => {
       S.contacts.value = c;
       S.messages.value = m;
+    });
+    await this.enqueue(async () => {
+      await db.deleteMany('contacts', [id]);
+      await db.deleteMessagesOfContact(id);
     });
   }
 
@@ -696,7 +710,7 @@ export class Engine {
     }
     // ocultar el fallido
     if (m.local) {
-      await db.deleteMany('messages', [m.id]);
+      void this.enqueue(() => db.deleteMany('messages', [m.id]));
       const next = new Map(S.messages.value);
       next.set(
         m.contactId,
