@@ -64,8 +64,21 @@ export function requireAuth(ctx: Ctx) {
   };
 }
 
+/** Límite simple en memoria: N intentos por IP y ventana. */
+function rateLimiter(max: number, windowMs: number) {
+  const hits = new Map<string, { n: number; reset: number }>();
+  return async (req: FastifyRequest) => {
+    const now = Date.now();
+    if (hits.size > 10000) for (const [k, v] of hits) if (v.reset < now) hits.delete(k);
+    const h = hits.get(req.ip);
+    if (!h || h.reset < now) { hits.set(req.ip, { n: 1, reset: now + windowMs }); return; }
+    if (++h.n > max) throw new ApiError('limit_reached', 'Demasiados intentos; espera un minuto');
+  };
+}
+
 export function authRoutes(app: FastifyInstance, ctx: Ctx) {
-  app.post('/api/auth/register', { config: { rateLimit: true } }, async (req, reply) => {
+  const limited = { preHandler: rateLimiter(Number(process.env.AUTH_RATE_LIMIT ?? 10), 60_000) };
+  app.post('/api/auth/register', limited, async (req, reply) => {
     const b = parse(Creds, req.body);
     if (ctx.db.prepare('SELECT 1 FROM users WHERE email = ?').get(b.email)) throw new ApiError('conflict', 'Ese email ya está registrado');
     const hash = await hashPassword(b.password);
@@ -78,7 +91,7 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx) {
     return session(ctx, userId, dev.id, dev.refresh);
   });
 
-  app.post('/api/auth/login', async req => {
+  app.post('/api/auth/login', limited, async req => {
     const b = parse(Creds, req.body);
     const u = ctx.db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(b.email) as { id: string; password_hash: string } | undefined;
     if (!u || !(await verifyPassword(b.password, u.password_hash))) throw new ApiError('unauthorized', 'Email o contraseña incorrectos');

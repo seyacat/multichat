@@ -32,7 +32,7 @@ export const telegram: Driver<Creds> = {
     await call(c.botToken, 'setWebhook', {
       url: `${ctx.config.publicUrl}/wh/telegram/${integ.id}`,
       secret_token: integ.webhook_secret,
-      allowed_updates: ['message', 'edited_message', 'channel_post'],
+      allowed_updates: ['message', 'channel_post'],
       drop_pending_updates: false,
     });
     return { info };
