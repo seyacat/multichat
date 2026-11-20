@@ -238,10 +238,12 @@ Payload APNs:
 ```json
 {
   "aps": { "alert": { "title": "Multichat", "body": "Nuevo mensaje" }, "mutable-content": 1, "sound": "default", "thread-id": "c_…" },
-  "mc": { "messageId": "m_…", "contactId": "c_…", "hidePreview": false, "profile": "envelope", "alias": "envelope"|null, "envelope": "envelope" | null }
+  "mc": { "messageId": "m_…", "contactId": "c_…", "seq": 456, "hidePreview": false, "profile": "envelope", "alias": "envelope"|null, "envelope": "envelope" | null }
 }
 ```
 `envelope` va `null` si el payload pasaría de 4 KB; la extensión lo baja con `GET /api/messages?since=<seq-1>` o muestra el texto genérico.
+
+Reintentos: `POST /api/contacts/:id/messages` con un `clientId` ya usado devuelve el mensaje existente (idempotente).
 
 Web Push: el cuerpo es el objeto `mc` en JSON; el service worker lo descifra con la clave de IndexedDB.
 

@@ -71,7 +71,7 @@ enum NotificationRenderer {
         if let env = mc.envelope {
             payload = try? Envelope.openJSON(MessagePayload.self, env, privateKey: key)
         } else {
-            payload = await fetchPayload(messageId: mc.messageId, key: key)
+            payload = await fetchPayload(messageId: mc.messageId, seq: mc.seq, key: key)
         }
         if let payload {
             let text = payload.previewText
@@ -84,11 +84,11 @@ enum NotificationRenderer {
         return out
     }
 
-    /// El push no trajo el sobre (> 4 KB): se baja con GET /api/messages?since=<último seq conocido>.
-    /// Ver NOTES.md: el push no lleva el `seq` del mensaje.
-    private static func fetchPayload(messageId: String, key: Data) async -> MessagePayload? {
+    /// El push no trajo el sobre (> 4 KB): se baja con GET /api/messages?since=<seq - 1>
+    /// (o desde el último seq conocido si el push no trae seq).
+    private static func fetchPayload(messageId: String, seq: Int?, key: Data) async -> MessagePayload? {
         guard var session = SecureStore.loadSession(), let base = URL(string: AppGroup.serverURL) else { return nil }
-        var since = max(0, AppGroup.lastSeq)
+        var since = seq.map { max(0, $0 - 1) } ?? max(0, AppGroup.lastSeq)
         for _ in 0..<3 {
             var comps = URLComponents(url: base.appendingPathComponent("api/messages"), resolvingAgainstBaseURL: false)!
             comps.queryItems = [URLQueryItem(name: "since", value: String(since)), URLQueryItem(name: "limit", value: "200")]

@@ -189,6 +189,8 @@ struct MessagePayload: Codable, Hashable, Sendable {
 struct PushMC: Codable, Sendable {
     var messageId: String
     var contactId: String
+    /// seq del mensaje; con envelope null se baja con since = seq - 1.
+    var seq: Int?
     var hidePreview: Bool?
     var profile: String?
     var alias: String?
