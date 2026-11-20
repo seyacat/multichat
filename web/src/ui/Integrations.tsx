@@ -139,10 +139,13 @@ function CredentialFields({
   type,
   values,
   onChange,
+  optional = false,
 }: {
   type: Platform;
   values: Record<string, string>;
   onChange: (v: Record<string, string>) => void;
+  /** Al cambiar credenciales: ningún campo es obligatorio (vacío = se mantiene). */
+  optional?: boolean;
 }) {
   return (
     <>
@@ -153,8 +156,8 @@ function CredentialFields({
             type={(f.secret ? 'password' : 'text') as 'text'}
             autocomplete="off"
             spellcheck={false}
-            required
-            placeholder={f.placeholder}
+            required={!optional}
+            placeholder={optional ? 'Sin cambios' : f.placeholder}
             value={values[f.key] ?? ''}
             onInput={e => onChange({ ...values, [f.key]: e.currentTarget.value.trim() })}
           />
@@ -572,7 +575,7 @@ export function EditIntegration({ id }: { id: string }) {
                 {HELP[i.type]}
               </details>
               <p class="muted small">Escribe solo lo que cambia (por ejemplo, el token). Los campos vacíos se mantienen.</p>
-              <CredentialFields type={i.type} values={creds} onChange={setCreds} />
+              <CredentialFields type={i.type} values={creds} onChange={setCreds} optional />
               <div class="row gap">
                 <button type="button" class="btn" onClick={() => setRotating(false)}>
                   Cancelar
