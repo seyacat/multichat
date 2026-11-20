@@ -47,7 +47,7 @@ final class ProtocolTests: XCTestCase {
     }
 
     func testJSONValueIntegrationInfo() throws {
-        let json = #"{"id":"i_1","type":"discord","name":"Bot","color":"#3b82f6","enabled":true,"status":"connected","statusDetail":null,"credentialHint":"a1B2","info":{"botId":"123","username":"bot","inviteUrl":"https://x"},"config":{"channelIds":["1","2"],"allowDMs":true},"webhookUrl":null,"createdAt":1,"updatedAt":2}"#
+        let json = ##"{"id":"i_1","type":"discord","name":"Bot","color":"#3b82f6","enabled":true,"status":"connected","statusDetail":null,"credentialHint":"a1B2","info":{"botId":"123","username":"bot","inviteUrl":"https://x"},"config":{"channelIds":["1","2"],"allowDMs":true},"webhookUrl":null,"createdAt":1,"updatedAt":2}"##
         let i = try JSONDecoder().decode(Integration.self, from: Data(json.utf8))
         XCTAssertEqual(i.type, .discord)
         XCTAssertEqual(i.config?["channelIds"]?.stringArray, ["1", "2"])
