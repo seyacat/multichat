@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => {
     plugins: [preact()],
     server: {
       port: 5173,
+      // el SW de desarrollo vive en /src/sw.ts pero controla todo el origen
+      headers: { 'Service-Worker-Allowed': '/' },
       proxy: {
         '/api': { target, changeOrigin: true, ws: true },
         '/wh': { target, changeOrigin: true },

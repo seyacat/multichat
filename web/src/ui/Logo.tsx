@@ -1,0 +1,13 @@
+// Marca de Multichat: tres burbujas superpuestas (una por plataforma).
+export function Logo({ size = 32 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" class="logo">
+      <rect width="64" height="64" rx="16" fill="var(--accent)" />
+      <path d="M14 18h22a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6H24l-7 6v-6h-3a6 6 0 0 1-6-6V24a6 6 0 0 1 6-6Z" fill="#fff" opacity=".95" />
+      <path d="M44 27h6a6 6 0 0 1 6 6v9a6 6 0 0 1-6 6h-1v5l-6-5h-9a6 6 0 0 1-5.6-4H36a8 8 0 0 0 8-8V27Z" fill="#fff" opacity=".6" />
+      <circle cx="18" cy="29" r="2.5" fill="var(--accent)" />
+      <circle cx="25" cy="29" r="2.5" fill="var(--accent)" />
+      <circle cx="32" cy="29" r="2.5" fill="var(--accent)" />
+    </svg>
+  );
+}

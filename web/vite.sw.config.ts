@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   publicDir: false,
+  define: { __SW_VERSION__: JSON.stringify(String(Date.now())) },
   build: {
     target: 'es2022',
     emptyOutDir: false,
