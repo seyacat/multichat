@@ -1,4 +1,4 @@
-import webpush from 'web-push';
+import * as webpush from 'web-push';
 import type { Config } from '../config.js';
 import type { DB } from '../db/index.js';
 import type { Hub } from '../hub.js';
