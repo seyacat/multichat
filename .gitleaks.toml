@@ -1,0 +1,5 @@
+title = "multichat"
+[extend]
+useDefault = true
+[allowlist]
+paths = ['''shared/crypto-vectors/vectors\.json''', '''(^|/)package-lock\.json''']

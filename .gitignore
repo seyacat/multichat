@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+data/
+*.sqlite
+*.sqlite-*
+*.db
+*.p8
+*.pem
+*.key
+.DS_Store
+coverage/
+# iOS
+ios/*.xcodeproj/
+ios/build/
+xcuserdata/
+DerivedData/
+*.xcuserstate
