@@ -12,9 +12,9 @@ struct MultichatApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .modelErrorAlert() // dentro del environment: lee AppModel
                 .environment(model)
                 .modelContainer(model.container)
-                .modelErrorAlert()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { model.didBecomeActive() }
