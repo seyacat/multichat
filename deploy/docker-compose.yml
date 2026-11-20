@@ -1,0 +1,27 @@
+services:
+  proxy:
+    build: ../proxy
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - proxy-data:/data
+      - ../web/dist:/web:ro
+      - ./secrets/apns.p8:/run/secrets/apns.p8:ro
+    expose: ["8787"]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [proxy]
+
+volumes:
+  proxy-data:
+  caddy-data:
+  caddy-config:
